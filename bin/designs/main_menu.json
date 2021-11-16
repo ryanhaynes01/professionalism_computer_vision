@@ -1,0 +1,13 @@
+{
+    "title": "Main Menu",
+    "buttons": [
+        [
+            "Admin",
+            "admin"
+        ],
+        [
+            "Employee",
+            "employee"
+        ]
+    ]
+}

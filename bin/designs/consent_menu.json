@@ -1,0 +1,12 @@
+{
+    "title": "Consent Menu",
+    "buttons": [
+        [
+            "Consent",
+            "consent"
+        ]
+    ],
+    "labels": [
+        "By using this program you are consenting to the usage and storage of your face. If you do not consent to the usage of your face, please quit the program. However, if you do consent to the usage of this information, please press the consent button."
+    ]
+}
