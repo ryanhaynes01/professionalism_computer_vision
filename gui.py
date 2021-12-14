@@ -2,6 +2,7 @@ import json
 import tkinter as tk
 from tkinter import ttk
 from tkinter import font
+from tkinter.constants import CENTER, E, NSEW, W
 
 class Menu(ttk.Frame):
     def __init__(self, master=None):
@@ -13,6 +14,7 @@ class Menu(ttk.Frame):
         self.configure_style_info()
         self.lbl_objs = []
         self.btn_objs = []
+        self.txt_objs = []
         self.frame.grid()
         self.row_counter = 0
 
@@ -53,7 +55,9 @@ class Menu(ttk.Frame):
 
     def add_label(self, text):
         """CREATE LABELS"""
-        lbl = ttk.Label(self.frame, text=f"{text}", wraplength=300, justify='center')
+        if text.lower() in ["username:", "password:"]:
+            self.add_text_box()
+        lbl = ttk.Label(self.frame, text=f"{text}", wraplength=300, anchor='center')
         lbl.grid(row=self.row_counter, column=0)
         self.lbl_objs.append(lbl)
 
@@ -64,6 +68,13 @@ class Menu(ttk.Frame):
         btn.grid(row=self.row_counter, column=0)
         self.btn_objs.append(btn)
 
+    def add_text_box(self):
+        #self.row_counter 
+        print(self.row_counter)
+        txt = tk.Text(self.master, height=1, width=50)
+        txt.grid(row=self.row_counter+1, column=0, sticky=NSEW)
+        self.txt_objs.append(txt)
+
     def reset(self):
         """CLEAR THE ROOT FRAME"""
         for lbl in self.lbl_objs:
@@ -71,6 +82,9 @@ class Menu(ttk.Frame):
         
         for btn in self.btn_objs:
             btn.destroy()
+
+        for txt in self.txt_objs:
+            txt.destroy()
 
 class UserInterface(Menu):
     def __init__(self, master=None):
@@ -112,7 +126,10 @@ def create_menu(path):
     # extract label data, if it exists
     if "labels" in data.keys():
         # extract options information from data
-        main.set_labels([text for text in data['labels']])
+        labels = [text for text in data['labels']]
+        if 'Username:' in labels:
+            print("pog")
+        main.set_labels(labels)
 
     # extract options data, if it exists
     if "buttons" in data.keys():
@@ -130,7 +147,7 @@ def main_menu():
     file_name = "main_menu"
 
     # configure the columns for single line menus
-    main.master.columnconfigure(0, weight=3)
+    main.master.columnconfigure(0, weight=1)
 
     # add all information to GUI
     create_menu(file_name)
@@ -140,6 +157,15 @@ def admin_menu():
 
 def employee_menu():
     print("We called employee menu!")
+
+def login_menu():
+    main.reset()
+
+    file_name = "login"
+
+    main.columnconfigure(0, weight=3)
+
+    create_menu(file_name)
 
 def consent_menu():
     # clear GUI for new items
@@ -157,7 +183,7 @@ def consent_menu():
 # function mapper to assign functions to buttons when
 # the buttons are created
 function_mapping = {
-    'consent': main_menu,
+    'consent': login_menu,
     'admin': admin_menu,
     'employee': employee_menu
 }
@@ -165,6 +191,6 @@ function_mapping = {
 if __name__ == '__main__':
     # initially set up the consent menu
     consent_menu()
-
+    #main.add_text_box()
     # run the root mainloop
     main.mainloop()
