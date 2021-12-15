@@ -1,8 +1,13 @@
 import json
 import tkinter as tk
-from tkinter import ttk
+from tkinter import  ttk
 from tkinter import font
-from tkinter.constants import CENTER, E, NSEW, W
+from tkinter.constants import CENTER, E, EW, NSEW, W
+
+def _from_rgb(rgb):
+    
+    r, g, b = rgb
+    return f'#{r:02x}{g:02x}{b:02x}'
 
 class Menu(ttk.Frame):
     def __init__(self, master=None):
@@ -12,6 +17,7 @@ class Menu(ttk.Frame):
         # class variable declaration
         self.frame = ttk.Frame(master, padding=10)
         self.configure_style_info()
+        self.colours = ['#5865F2', '#F2A358']
         self.lbl_objs = []
         self.btn_objs = []
         self.txt_objs = []
@@ -55,10 +61,10 @@ class Menu(ttk.Frame):
 
     def add_label(self, text):
         """CREATE LABELS"""
-        if text.lower() in ["username:", "password:"]:
-            self.add_text_box()
         lbl = ttk.Label(self.frame, text=f"{text}", wraplength=300, anchor='center')
         lbl.grid(row=self.row_counter, column=0)
+        if text.lower() in ["username:", "password:"]:
+            self.add_text_box()
         self.lbl_objs.append(lbl)
 
     def add_button(self, text, cmd):
@@ -71,8 +77,8 @@ class Menu(ttk.Frame):
     def add_text_box(self):
         #self.row_counter 
         print(self.row_counter)
-        txt = tk.Text(self.master, height=1, width=50)
-        txt.grid(row=self.row_counter+1, column=0, sticky=NSEW)
+        txt = ttk.Entry(self.master, font=self.style, width=50)
+        txt.grid(row=self.row_counter, column=1, sticky=EW)
         self.txt_objs.append(txt)
 
     def reset(self):
@@ -103,6 +109,7 @@ class UserInterface(Menu):
 # and then instantiate the menu object
 root = tk.Tk()
 root.geometry("600x300")
+root.configure(background='#5865F2')
 main = Menu(root)
 
 def load_data(dir):
