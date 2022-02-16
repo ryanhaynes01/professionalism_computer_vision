@@ -1,0 +1,7 @@
+SQLite Error: near "<": syntax error
+Exception Class: <class 'sqlite3.OperationalError'>
+SQLite Error Traceback:
+Traceback (most recent call last):
+  File "e:\Code\Python\Professionalism\professionalism_computer_vision\database_handler.py", line 80, in basic_database_commands
+    self._cur.execute(command)
+sqlite3.OperationalError: near "<": syntax error

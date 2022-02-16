@@ -1,11 +1,11 @@
 import json
+import facial_detection as fd
 import tkinter as tk
 from tkinter import  ttk
 from tkinter import font
 from tkinter.constants import CENTER, E, EW, NSEW, W
 
 def _from_rgb(rgb):
-    
     r, g, b = rgb
     return f'#{r:02x}{g:02x}{b:02x}'
 

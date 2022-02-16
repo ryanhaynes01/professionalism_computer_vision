@@ -2,16 +2,44 @@
 import imutils
 import cv2 as cv
 
+face_cascade = cv.CascadeClassifier('model_data/frontal_face_detection.xml')
+
+frame = 0
+
+def get_video():
+    camera = cv.VideoCapture(0)
+    if not camera.isOpened():
+        print("Camera could not be accessed!")
+        exit()
+
+    return camera
+
+def show_video():
+    camera = get_video()
+    while True:
+
+        ret, frame = camera.read()
+        gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+        faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+
+        if not ret:
+            print("Cannot recieve frames. Exiting...")
+            camera.release()
+            return
+        
+        for (x, y, w, h) in faces:
+            cv.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
+
+        cv.imshow("Facial Detection", frame)
+        if cv.waitKey(1) == ord('q'):
+            camera.release()
+            return
+        
+        frame = frame
+
+
 if __name__ == '__main__':
     print(cv.__version__)
-
-    # load in a test image
-    # get dimension information from NumPy array
-    # display information
-    image = cv.imread("bin\images\linus.jpg")
-    (height, width, depth) = image.shape
-    print(f'Width = {width}, Height = {height}, Depth = {depth}') 
-
-    # display image
-    cv.imshow("Linus", image)
+    show_video()
+    cv.destroyAllWindows()
     cv.waitKey(0)
