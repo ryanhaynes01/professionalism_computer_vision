@@ -1,6 +1,11 @@
 import json
 import facial_detection as fd
 import tkinter as tk
+import cv2 as cv
+import time
+import numpy as np
+import threading
+from PIL import Image, ImageTk
 from tkinter import  ttk
 from tkinter import font
 from tkinter.constants import CENTER, E, EW, NSEW, W
@@ -103,6 +108,36 @@ class UserInterface(Menu):
     # Add functionality for admin
     # Add functionality for employees
 
+class LoginWithVideo():
+    def __init__(self):
+        self.root = tk.Tk()
+        self.face = fd.FacialDetection()
+        self.thread = threading.Thread(target=self.face.show_video, args=())
+        self.thread.start()
+        self.label = None
+        self.frame = None
+        self.view_video()
+
+    def view_video(self):
+        self.label = tk.Label()
+        self.label["text"] = "Camera is starting...."
+        self.label.grid(row=0, column=0)
+        self.root.update()
+
+        while True:
+            if self.face.public_frame is not None:
+                self.frame = self.face.public_frame
+                #image = cv.cvtColor(self.frame, 0, cv.COLOR_BGR2RGB)
+                image = Image.fromarray(self.frame)
+                image = ImageTk.PhotoImage(image)
+
+                if self.label is None:
+                    self.label["image"] = image
+                    self.label.grid(row=0, column=0)
+                else:
+                    self.label["image"] = image
+
+                self.root.update()
 
 # create the root for the GUI window
 # then set the size of the window
@@ -197,7 +232,8 @@ function_mapping = {
 
 if __name__ == '__main__':
     # initially set up the consent menu
-    consent_menu()
+    #consent_menu()
     #main.add_text_box()
     # run the root mainloop
-    main.mainloop()
+    #main.mainloop()
+    LoginWithVideo().root.mainloop()
