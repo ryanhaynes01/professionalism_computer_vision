@@ -1,9 +1,10 @@
 import json
+import base64
+import os
 import facial_detection as fd
+import database_handler as dh
 import tkinter as tk
-import cv2 as cv
 import time
-import numpy as np
 import threading
 from PIL import Image, ImageTk
 from tkinter import  ttk
@@ -112,8 +113,8 @@ class LoginWithVideo():
     def __init__(self):
         self.root = tk.Tk()
         self.face = fd.FacialDetection()
+        self.db = dh.DatabaseHandler()
         self.thread = threading.Thread(target=self.face.show_video, args=())
-        self.thread.start()
         self.label = None
         self.frame = None
         self.view_video()
@@ -121,11 +122,30 @@ class LoginWithVideo():
     def view_video(self):
         self.label = tk.Label()
         self.label["text"] = "Camera is starting...."
+        name = self.db.handler("get", ["Name", "username == 'atucker02'"])[0]
+
+        with open(f"faces/{name}/encoded.bin", "rb", buffering=0) as f:
+            image_to_decode = f.read()
+
+        image = base64.b64decode(image_to_decode)
+
+        with open(f"faces/{name}/tmp.jpg", "wb") as f:
+            f.write(image)
+
+        self.face.temp_location = f"faces/{name}/tmp.jpg"
+        self.face.load_encodings()
+        self.thread.start()
         self.label.grid(row=0, column=0)
         self.root.update()
+        self.face.known_face_names[0] = name
+        
+        os.remove(f"faces/{name}/tmp.jpg")
 
         while True:
             if self.face.public_frame is not None:
+                if self.face.init_time is None:
+                    self.face.init_time = time.time()
+            
                 self.frame = self.face.public_frame
                 #image = cv.cvtColor(self.frame, 0, cv.COLOR_BGR2RGB)
                 image = Image.fromarray(self.frame)
@@ -136,6 +156,10 @@ class LoginWithVideo():
                     self.label.grid(row=0, column=0)
                 else:
                     self.label["image"] = image
+
+                if not self.thread.is_alive():
+                    root.destroy
+                    return
 
                 self.root.update()
 
@@ -236,4 +260,4 @@ if __name__ == '__main__':
     #main.add_text_box()
     # run the root mainloop
     #main.mainloop()
-    LoginWithVideo().root.mainloop()
+    lg = LoginWithVideo()

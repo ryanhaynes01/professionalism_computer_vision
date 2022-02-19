@@ -20,8 +20,9 @@ standard = {
 # general stucture for commands that will be executed on the database
 commands = {
     "insert": "INSERT INTO Main VALUES (<arguments>)",
-    "remove": "DELETE FROM Main WHERE (<condition>)",
-    "edit": "UPDATE Main SET (<condition>) WHERE (<condition2>)",
+    "remove": "DELETE FROM Main WHERE <condition>",
+    "edit": "UPDATE Main SET <condition> WHERE <condition2>",
+    "get": "SELECT <arguments> FROM Main WHERE <condition>",
     "view_specific": "SELECT <arguments> FROM Main",
     "view_all": "SELECT * FROM Main" 
 }
@@ -77,6 +78,9 @@ class DatabaseHandler:
 
         # otherwise execute the command and then commit the change
         try:
+            if command.__contains__("SELECT"):
+                temp = self._cur.execute(command).fetchall()
+                return temp[0]
             self._cur.execute(command)
             self._db.commit()
         except sql.Error as e:
@@ -105,12 +109,14 @@ class DatabaseHandler:
             raw_command = raw_command.replace(to_replace, data[i])
 
         # if view specific, display
-        if command == "view_all" or command == "view_specific":
+        if command == "view_all":
             self.display_from_database(raw_command)
             return
-        
+
         # otherwise, execute the commands without much visual aid
-        self.basic_database_commands(raw_command)
+        temp = self.basic_database_commands(raw_command)
+        if temp is not None:
+            return temp
 
 
 if __name__ == '__main__':
@@ -124,4 +130,9 @@ if __name__ == '__main__':
     #cur.execute("""INSERT INTO Main VALUES (NULL, 'Ryan Haynes', '21 Queen Street', 'ryanhaynes01', 'kekw', 20, '11/06/2001', 10, 0, 'Empty')""")
     #db.commit()
     #handler(["NULL, 'Alex Tucker', 'Somewhere lol', 'atucker', 'pogchamp', 19, 'pog', 0.1, 0, ''"], "insert")
+    #face = open("face_test/Ryan/encoded.bin", "rb")
+    #face = face.read()
+    #face = face.decode("utf-8")
+    #dbh.handler("edit", [f"""'Face' = "'{face}'\"""", "ID == 1"])
+    dbh.handler("insert", ["NULL, 'Alex Tucker', 'The Whitehouse', 'atucker02', 'kekw', 19, '29/08/2002', '10', '0', 'Empty'"])
     dbh.handler("view_all")
