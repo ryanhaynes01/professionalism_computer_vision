@@ -12,9 +12,8 @@ standard = {
     "password": str,
     "Age": int,
     "DoB": str,
-    "Weekly Hours": float,
-    "Hierarchy": int,
-    "Face Image": str
+    "WeeklyHours": float,
+    "Hierarchy": int
 }
 
 # general stucture for commands that will be executed on the database
@@ -26,7 +25,6 @@ commands = {
     "view_specific": "SELECT <arguments> FROM Main",
     "view_all": "SELECT * FROM Main" 
 }
-
 
 class DatabaseHandler:
     def __init__(self):
@@ -80,7 +78,7 @@ class DatabaseHandler:
         try:
             if command.__contains__("SELECT"):
                 temp = self._cur.execute(command).fetchall()
-                return temp[0]
+                return temp
             self._cur.execute(command)
             self._db.commit()
         except sql.Error as e:
@@ -121,18 +119,20 @@ class DatabaseHandler:
 
 if __name__ == '__main__':
     # this is primarily a fallback, so if the database does not currently exist, make one
-    dbh = DatabaseHandler()
-    if dbh._db is None:
-        dbh.basic_database_commands("""CREATE TABLE Main
-        (ID integer PRIMARY KEY AUTOINCREMENT, Name text NOT NULL, Address text NOT NULL, username text NOT NULL,
-        password text NOT NULL, Age integer NOT NULL, DoB text NOT NULL, Weekly Hours real, Hierarchy integer NOT NULL, Face Image text)""")
-        dbh._db.commit()
-    #cur.execute("""INSERT INTO Main VALUES (NULL, 'Ryan Haynes', '21 Queen Street', 'ryanhaynes01', 'kekw', 20, '11/06/2001', 10, 0, 'Empty')""")
+    #dbh = DatabaseHandler()
+    #if dbh._db is None:
+    #dbh._cur.execute("""CREATE TABLE Main
+    #(ID integer PRIMARY KEY AUTOINCREMENT, Name text NOT NULL, Address text NOT NULL, username text NOT NULL,
+    #password text NOT NULL, Age integer NOT NULL, DoB text NOT NULL, WeeklyHours real, Hierarchy integer NOT NULL)""")
+    #dbh._db.commit()
+    #dbh._cur.execute("""INSERT INTO Main VALUES (NULL, 'Ryan Haynes', '21 Queen Street', 'ryanhaynes01', 'kekw', 20, '11/06/2001', 10, 0)""")
     #db.commit()
+    #print(dbh.handler("insert", ["NULL, 'Ryan Haynes', '21 Queen Street', 'ryanhaynes01', 'kekw', 20, '11/06/2001', 10, 0"]))
+    #dbh.handler("view_all")
     #handler(["NULL, 'Alex Tucker', 'Somewhere lol', 'atucker', 'pogchamp', 19, 'pog', 0.1, 0, ''"], "insert")
     #face = open("face_test/Ryan/encoded.bin", "rb")
     #face = face.read()
     #face = face.decode("utf-8")
     #dbh.handler("edit", [f"""'Face' = "'{face}'\"""", "ID == 1"])
-    dbh.handler("insert", ["NULL, 'Alex Tucker', 'The Whitehouse', 'atucker02', 'kekw', 19, '29/08/2002', '10', '0', 'Empty'"])
-    dbh.handler("view_all")
+    #print(dbh.handler("get", ["*", "username == 'ryanhaynes01'"]))
+    pass
