@@ -1,6 +1,7 @@
 # imports
 import cv2 as cv
 import face_recognition
+from tkinter.messagebox import showinfo
 import numpy as np
 import time
 
@@ -17,6 +18,7 @@ class FacialDetection():
         self.face_encodings = []
         self.face_names = []
         self.is_found = False
+        self.found_camera = False
         self.process_this_frame = True
         self.known_face_names = [
             ""
@@ -38,8 +40,9 @@ class FacialDetection():
 
         # if the camera can't be opened, exit and return error
         if not camera.isOpened():
-            print("Camera could not be accessed!")
             exit()
+
+        self.found_camera = True
 
         # otherwise return the camera object
         return camera
