@@ -1,5 +1,4 @@
 import base64
-import re
 import utilities as util
 import os
 import facial_detection as fd
@@ -591,7 +590,7 @@ class LoginWithVideo():
             ConsentMenu(self._root)
 
     def LoginButton_command(self):
-        username = self._user_text.get(1.0, "end-1c")
+        username = self._user_text.get()
         self.view_video(username)
 
     def BackButton_command(self):

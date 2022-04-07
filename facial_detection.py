@@ -1,14 +1,14 @@
 # imports
 import cv2 as cv
 import face_recognition
+import utilities as util
 from tkinter.messagebox import showinfo
 import numpy as np
 import time
 
 class FacialDetection():
     def __init__(self):
-        # load in training data from intel
-        self.face_cascade = cv.CascadeClassifier('model_data/frontal_face_detection.xml')
+        self.fm = util.FileManager()
         self.public_frame = None
         self.init_time = None
         self.timeout = 10
@@ -25,14 +25,20 @@ class FacialDetection():
         ]
 
     def load_encodings(self):
-        # Load a sample picture and learn how to recognize it.
-        person = face_recognition.load_image_file(self.temp_location)
-        person_face_encoding = face_recognition.face_encodings(person)[0]
+        # validate the the files exist
+        try:
+            self.fm.validate_path(self.temp_location)
+        except Exception as e:
+            print(e)
+        finally:
+            # Load a sample picture and learn how to recognize it.
+            person = face_recognition.load_image_file(self.temp_location)
+            person_face_encoding = face_recognition.face_encodings(person)[0]
 
-        # Create arrays of known face encodings and their names
-        self.known_face_encodings = [
-            person_face_encoding
-        ]
+            # Create arrays of known face encodings and their names
+            self.known_face_encodings = [
+                person_face_encoding
+            ]
 
     def get_video(self):
         # initilaize the camera so opencv can use it
