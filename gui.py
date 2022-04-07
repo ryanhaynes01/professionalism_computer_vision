@@ -156,7 +156,7 @@ class StaffForm:
         temp_data.remove(temp_data[0])
         temp_data.pop()
         for i in range(0, len(temp_data)):
-            self._text_fields[i].insert("end", str(temp_data[i]))
+            self._text_fields[i].insert(0, str(temp_data[i]))
 
 
 class AdminMenu:
@@ -269,10 +269,10 @@ class EmployeeMenu:
         LogOut.place(x=40,y=280,width=170,height=40)
         LogOut["command"] = self.log_out
 
-        EmployeeName=tk.Label(root, bg="#ff8c00", fg="#000000", font=ft, justify="center", text=f"Hello, {name}")
+        EmployeeName=tk.Label(root, bg="#ff8c00", fg="000000", font=ft, justify="center", text=f"Hello, {name}")
         EmployeeName.place(x=40,y=40,width=170,height=40)
 
-        InfoBox=tk.Listbox(root, bg="#ff8c00", fg="#333333", borderwidth="1px", font=ft, justify="center")
+        InfoBox=tk.Listbox(root, bg="#ff8c00", fg="333333", borderwidth="1px", font=ft, justify="center")
         InfoBox.place(x=240,y=40,width=260,height=300)
         self._info_list = InfoBox
 
@@ -494,7 +494,8 @@ class LoginWithVideo():
     def get_name_and_encoded(self, username):
         try:
             # get the users name from the database
-            name = self.db.handler("get", ["Name", f"username == '{username}'"])[0][0]
+            name = self.db.get_user("Name", "username", username)
+            print(f"Name: {name}")
 
             # try to open their face data
             with open(f"faces/{name}/encoded.bin", "rb", buffering=0) as f:
@@ -590,7 +591,7 @@ class LoginWithVideo():
             ConsentMenu(self._root)
 
     def LoginButton_command(self):
-        username = self._user_text.get()
+        username = self._user_text.get(1.0, "end-1c")
         self.view_video(username)
 
     def BackButton_command(self):

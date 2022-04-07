@@ -85,6 +85,16 @@ class DatabaseHandler:
             exc_type, exc_value, exc_tb = sys.exc_info()
             self.error_log(e, exc_type, exc_value, exc_tb)
 
+    def get_user(self, id, reference, provided):
+        info = None
+        try:
+            info = self.handler("get", [f"{id}", f"{reference} == '{provided}'"])
+        
+        except Exception as e:
+            print(f"handler: {e}")
+
+        return info
+
     def handler(self, command:str = None, data:list = []):
         # convert the desired command to lowercase
         command = command.lower()
