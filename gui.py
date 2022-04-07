@@ -270,10 +270,10 @@ class EmployeeMenu:
         LogOut.place(x=40,y=280,width=170,height=40)
         LogOut["command"] = self.log_out
 
-        EmployeeName=tk.Label(root, bg="#ff8c00", fg="000000", font=ft, justify="center", text=f"Hello, {name}")
+        EmployeeName=tk.Label(root, bg="#ff8c00", fg="#000000", font=ft, justify="center", text=f"Hello, {name}")
         EmployeeName.place(x=40,y=40,width=170,height=40)
 
-        InfoBox=tk.Listbox(root, bg="#ff8c00", fg="333333", borderwidth="1px", font=ft, justify="center")
+        InfoBox=tk.Listbox(root, bg="#ff8c00", fg="#333333", borderwidth="1px", font=ft, justify="center")
         InfoBox.place(x=240,y=40,width=260,height=300)
         self._info_list = InfoBox
 
