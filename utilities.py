@@ -5,26 +5,39 @@ import database_handler as dh
 
 class FileManager():
     def __init__(self):
-        cwd = os.getcwd()
-        self.face_path = os.path.join(cwd, "faces")
+        # establish the current working directory
+        # for the rest of the manager to use
+        self.cwd = os.getcwd()
     
     def change_name(self, old_name, new_name):
-        old_path = os.path.join(self.face_path, old_name)
-        new_path = os.path.join(self.face_path, new_name)
+        # get the path for all of the face data
+        # then find the path for the old name, and what the new
+        # path will look like after the name has been altered
+        face_path = self.create_path(self.cwd, "faces")
+        old_path = self.create_path(face_path, old_name)
+        new_path = self.create_path(face_path, new_name)
 
         try:
+            # validate all of the paths and then rename the directory
+            self.validate_path(old_path)
+            self.validate_path(new_path)
             os.rename(old_path, new_path)
-        except OSError:
-            traceback = sys.exc_info()[2]
-            raise FileNotFoundError(
-                "Original path does not exist. The name provided might be wrong"
-            ).with_traceback(traceback)
+
+        except OSError as e:
+            # TODO:
+            # log data to an appropriate file
+
+            # throw the error raised to the console
+            print(e)
 
     def validate_path(self, dir):
         if os.path.exists(dir):
             return True
         
-        raise FileNotFoundError("File/Directory could not be found")
+        traceback = sys.exc_info()[2]
+        raise FileNotFoundError(
+            f"File/Directory could not be found:\n{dir}"
+        ).with_traceback(traceback)
     
     def create_path(self, *args):
         path = os.getcwd()
@@ -59,8 +72,5 @@ def main():
 
 if __name__ == '__main__':
     #main()
-    try:
-        fm = FileManager()
-        fm.change_name("Alex Tuckeradsf", "Alex Tucker")
-    except Exception as e:
-        print(e)
+    fm = FileManager()
+    fm.change_name("Alex Tuckeradsf", "Alex Tucker")

@@ -29,16 +29,18 @@ class FacialDetection():
         try:
             self.fm.validate_path(self.temp_location)
         except Exception as e:
+            # if not, print to console and destroy the thread gracefully
             print(e)
-        finally:
-            # Load a sample picture and learn how to recognize it.
-            person = face_recognition.load_image_file(self.temp_location)
-            person_face_encoding = face_recognition.face_encodings(person)[0]
+            exit()
+        
+        # Load a sample picture and learn how to recognize it.
+        person = face_recognition.load_image_file(self.temp_location)
+        person_face_encoding = face_recognition.face_encodings(person)[0]
 
-            # Create arrays of known face encodings and their names
-            self.known_face_encodings = [
-                person_face_encoding
-            ]
+        # Create arrays of known face encodings and their names
+        self.known_face_encodings = [
+            person_face_encoding
+        ]
 
     def get_video(self):
         # initilaize the camera so opencv can use it
@@ -119,7 +121,6 @@ class FacialDetection():
 
 if __name__ == '__main__':
     print(cv.__version__)
-    #fd = FacialDetection()
+    fd = FacialDetection()
     #fd.show_video()
-    cv.destroyAllWindows()
-    cv.waitKey(0)
+    fd.load_encodings()
