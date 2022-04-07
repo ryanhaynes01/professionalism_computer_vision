@@ -6,6 +6,9 @@ from tkinter.messagebox import showinfo
 import numpy as np
 import time
 
+class NoCamera(Exception):
+    pass
+
 class FacialDetection():
     def __init__(self):
         self.fm = util.FileManager()
@@ -43,17 +46,23 @@ class FacialDetection():
         ]
 
     def get_video(self):
-        # initilaize the camera so opencv can use it
-        camera = cv.VideoCapture(0)
+        try:
+            # initilaize the camera so opencv can use it
+            camera = cv.VideoCapture(0)
 
-        # if the camera can't be opened, exit and return error
-        if not camera.isOpened():
+            # if the camera can't be opened, exit and return error
+            if not camera.isOpened():
+                raise NoCamera("No camera could be opened")
+
+            self.found_camera = True
+
+            # otherwise return the camera object
+            return camera
+
+        except NoCamera as e:
+            print(f"Error Loading Camera: {e}")
+            print("Killing the thread")
             exit()
-
-        self.found_camera = True
-
-        # otherwise return the camera object
-        return camera
 
     def show_video(self):
         # get camera object
