@@ -64,6 +64,23 @@ class FacialDetection():
             print("Killing the thread")
             exit()
 
+    def upscale(self, frame):
+        # display the results
+        for (top, right, bottom, left), name in zip(self.face_locations, self.face_names):
+            # scale back up face locations since the frame we detected in was scaled to 1/4 size
+            top *= 4
+            right *= 4
+            bottom *= 4
+            left *= 4
+
+            # draw a box around the face
+            cv.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+
+            # draw a label with a name below the face
+            cv.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv.FILLED)
+            font = cv.FONT_HERSHEY_DUPLEX
+            cv.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
+
     def show_video(self):
         # get camera object
         camera = self.get_video()
@@ -104,22 +121,7 @@ class FacialDetection():
 
             self.process_this_frame = not self.process_this_frame
 
-
-            # display the results
-            for (top, right, bottom, left), name in zip(self.face_locations, self.face_names):
-                # scale back up face locations since the frame we detected in was scaled to 1/4 size
-                top *= 4
-                right *= 4
-                bottom *= 4
-                left *= 4
-
-                # draw a box around the face
-                cv.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
-
-                # draw a label with a name below the face
-                cv.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv.FILLED)
-                font = cv.FONT_HERSHEY_DUPLEX
-                cv.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
+            self.upscale(frame)
             
             # track if the program needs to timeout
             if self.init_time is not None:

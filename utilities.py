@@ -20,8 +20,8 @@ class FileManager():
         try:
             # validate all of the paths and then rename the directory
             self.validate_path(old_path)
-            self.validate_path(new_path)
             os.rename(old_path, new_path)
+            self.validate_path(new_path)
 
         except OSError as e:
             # TODO:
@@ -31,16 +31,24 @@ class FileManager():
             print(e)
 
     def validate_path(self, dir):
+        # tell the program if the directory exists, so we
+        # we can proceed with execution
         if os.path.exists(dir):
             return True
         
+        # get the traceback if something went wrong and raise it
         traceback = sys.exc_info()[2]
         raise FileNotFoundError(
             f"File/Directory could not be found:\n{dir}"
         ).with_traceback(traceback)
     
-    def create_path(self, *args):
-        path = os.getcwd()
+    def create_path(self, path=None, *args):
+        # if no base path is provided, work from the current working directory
+        if path is None:
+            path = os.getcwd()
+
+        # append each child folder in args to the path, geenerating a long
+        # directory string to be used
         for child in args:
             path = os.path.join(path, child)
 
@@ -48,13 +56,13 @@ class FileManager():
 
 class ImageEncoder():
     def __init__(self, name):
-        self.name = name
+        self._name = name
 
     def convert(self):
-        with open(f"faces/{self.name}/face.jpg", "rb") as f:
+        with open(f"faces/{self._name}/face.jpg", "rb") as f:
             converted = base64.b64encode(f.read())
 
-        with open(f"faces/{self.name}/encoded.bin", "wb") as f:
+        with open(f"faces/{self._name}/encoded.bin", "wb") as f:
             f.write(converted)
 
 def main():

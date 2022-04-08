@@ -1,5 +1,6 @@
 import base64
 import utilities as util
+import authenticator as auth
 import os
 import facial_detection as fd
 import database_handler as dh
@@ -25,6 +26,7 @@ class StaffForm:
         self._data = data
         self._text_fields = []
         self.edit = edit
+        self._fm = util.FileManager()
         self.db = dh.DatabaseHandler()
         self._hierarchy = hierarchy
         root.title("Staff Form")
@@ -147,8 +149,13 @@ class StaffForm:
             else:
                 output += f"{fields[i]} = '{info[i]}'"
 
-        self.db.handler("edit", [output, f"(ID == {self._data[0]})"])
-        self._root.destroy()
+        try:
+            self.db.handler("edit", [output, f"(ID == {self._data[0]})"])
+            self._fm.change_name(self._data[1], info[0])
+            self._root.destroy()
+        
+        except Exception as e:
+            print(f"Unknown Error Occured: {e}")
         
 
     def edit_user(self):
@@ -217,14 +224,21 @@ class AdminMenu:
         
         if index != -1:
             person = self._employee_listbox.get(index)
-            data = self.db.handler("get", ["*", f"Name == '{person}'"])
+            data = self.db.get_user("*", "Name", person)
             if data != []:
                 temp_root = tk.Tk()
                 temp_root["bg"] = self._root["bg"]
                 StaffForm(temp_root, 1, True, list(data[0]))
 
     def remove_employee(self):
-        print("command")
+        index = -1
+
+        for i in self._employee_listbox.curselection():
+            index = i
+
+        if index != -1:
+            self.db.remove_user("Name", self._employee_listbox.get(index))
+            showinfo("Removed", "Successfully Removed Employee")
 
     def add_employee(self):
         temp_root = tk.Tk()
@@ -269,10 +283,10 @@ class EmployeeMenu:
         LogOut.place(x=40,y=280,width=170,height=40)
         LogOut["command"] = self.log_out
 
-        EmployeeName=tk.Label(root, bg="#ff8c00", fg="000000", font=ft, justify="center", text=f"Hello, {name}")
+        EmployeeName=tk.Label(root, bg="#ff8c00", fg="#000000", font=ft, justify="center", text=f"Hello, {name}")
         EmployeeName.place(x=40,y=40,width=170,height=40)
 
-        InfoBox=tk.Listbox(root, bg="#ff8c00", fg="333333", borderwidth="1px", font=ft, justify="center")
+        InfoBox=tk.Listbox(root, bg="#ff8c00", fg="#333333", borderwidth="1px", font=ft, justify="center")
         InfoBox.place(x=240,y=40,width=260,height=300)
         self._info_list = InfoBox
 
@@ -417,41 +431,33 @@ class ManualLogin:
     def BackButton_command(self):        
         self._root = root_clear(self._root)
         ConsentMenu(self._root)
-    
-    def authenticator(self, username, password):
-        details = {
-            "hierarchy": 0,
-            "name": 1
-        }
-        info = self.db.handler("get", ["username, password", f"username == '{username}'"])
-        if info:
-            info = info[0]
-            if (info[0] == username and info[1] == password):
-                details_tuple = self.db.handler("get", ["Hierarchy, Name", f"username == '{username}'"])
-                for key in details.keys():
-                    details[key] = details_tuple[0][details[key]]
-                return True, details
-        
-        showinfo("Invalid Details", "Either the username or password were incorrect, please try again")
-        return False, details
 
     def LoginButton_command(self):
         username = self._user_text.get()
         password = self._pass_text.get()
-        logged, details = self.authenticator(username, password)
-        if logged:
-            showinfo("Logged In", "You have successfully logged in!")
-            if details["hierarchy"] == 0:
+        authenticator = auth.Authenticator()
+        # details structure: varification (bool), hierarchy (int), name (string)
+        details = authenticator.users_info("username, password", "username", username, password)
+
+        try:
+            if not details[0]:
+                showinfo("Login Error", "Invalid Details")
                 self._root = root_clear(self._root)
-                AdminMenu(self._root, details["name"])
+                ManualLogin(self._root)
+                return
+
+            showinfo("Logged In", "You have successfully logged in!")
+            if details[1] == 0:
+                self._root = root_clear(self._root)
+                AdminMenu(self._root, details[2])
                 return
             else:
                 self._root = root_clear(self._root)
-                EmployeeMenu(self._root, details["name"])
+                EmployeeMenu(self._root, details[2])
                 return
-        
-        self._root = root_clear(self._root)
-        ManualLogin(self._root)
+
+        except TypeError as e:
+            pass
 
 class LoginWithVideo():
     def __init__(self, root):
@@ -484,7 +490,7 @@ class LoginWithVideo():
             "hierarchy": 0
         }
 
-        details_tuple = self.db.handler("get", ["Hierarchy", f"Name == '{name}'"])
+        details_tuple = self.db.get_user("Hierarchy", "Name", name)
 
         for key in details.keys():
             details[key] = details_tuple[0][details[key]]
@@ -495,7 +501,7 @@ class LoginWithVideo():
         try:
             # get the users name from the database
             name = self.db.get_user("Name", "username", username)
-            print(f"Name: {name}")
+            name = name[0][0]
 
             # try to open their face data
             with open(f"faces/{name}/encoded.bin", "rb", buffering=0) as f:
@@ -514,9 +520,13 @@ class LoginWithVideo():
 
             return name
         
+        except IndexError:
+            showinfo("Username Error", f"Invalid Username: {username}")
+            return None
+
         except Exception as e:
-            self._username_error = True
             print(e)
+            return None
 
     def init_user_data(self, name):
         try:
@@ -533,26 +543,30 @@ class LoginWithVideo():
             print(e)
 
     def view_video(self, username):
-        self._root = root_clear(self._root)
-        name = self.get_name_and_encoded(username)
+        try:
+            self._root = root_clear(self._root)
+            name = self.get_name_and_encoded(username)
+            
+            if name is None:
+                raise NameError("Invalid Username")
 
-        if self._username_error:
-            showinfo("Invalid Details", "Sorry, the username entered does not exist!")
+            self.label = tk.Label(self._root, text="Camera is starting...")
+            self.label["font"] = tkFont.Font(family="Times", size=20)
+            self.label.grid(row=0, column=0)
+            self._root.update()
+
+            self.init_user_data(name)
+        
+            os.remove(f"faces/{name}/tmp.jpg")
+
+        except NameError as e:
+            print(e)
             LoginWithVideo(self._root)
             return
 
-        self.label = tk.Label(self._root, text="Camera is starting...")
-        self.label["font"] = tkFont.Font(family="Times", size=20)
-        self.label.grid(row=0, column=0)
-        self._root.update()
-
-        self.init_user_data(name)
-
-        try:
-            os.remove(f"faces/{name}/tmp.jpg")
-        
         except Exception as e:
             print(e)
+            LoginWithVideo(self._root)
             return
 
         while self.thread.is_alive():
@@ -561,7 +575,6 @@ class LoginWithVideo():
                     self.face.init_time = time.time()
             
                 self.frame = self.face.public_frame
-                #image = cv.cvtColor(self.frame, 0, cv.COLOR_BGR2RGB)
                 image = Image.fromarray(self.frame)
                 image = ImageTk.PhotoImage(image)
 
@@ -591,7 +604,7 @@ class LoginWithVideo():
             ConsentMenu(self._root)
 
     def LoginButton_command(self):
-        username = self._user_text.get(1.0, "end-1c")
+        username = self._user_text.get()
         self.view_video(username)
 
     def BackButton_command(self):

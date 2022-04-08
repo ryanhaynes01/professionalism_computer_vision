@@ -95,6 +95,9 @@ class DatabaseHandler:
 
         return info
 
+    def remove_user(self, id, provided):
+        self.handler("remove", [f"{id} == '{provided}'"])
+
     def handler(self, command:str = None, data:list = []):
         # convert the desired command to lowercase
         command = command.lower()
