@@ -26,14 +26,16 @@ class FaceCapture():
         self._name = name
         self._user = user
         self._root = root
+        self._root.title("Face Capture")
         self._root.geometry("640x520")
         self._camera = fd.CaptureFace()
         self._fm = util.FileManager()
         self._camera_feed = threading.Thread(target=self._camera.video, args=())
-        self._label = tk.Label(self._root, text="Camera is starting...")
+        ft = tkFont.Font(family='Times',size=24)
+        self._label = tk.Label(self._root, text="Camera is starting, please wait...", font=ft)
         self._label.place(x=0, y=0)
         self._capture = tk.Button(self._root, text="Capture!", command=self.save_image)
-        self._capture.place(x=500, y=240)
+        self._capture.place(x=320, y=490)
         self._root.update()
 
     def show_in_gui(self):
@@ -56,14 +58,10 @@ class FaceCapture():
         self._camera.finished = True
         self._fm.add_user_face(self._name, frame)
         root_clear(self._root)
-        AdminMenu(self._root, self._user)
-
-
-        
-
+        AdminMenu(self._root, self._user)  
 
 class StaffForm:
-    def __init__(self, root, user, hierarchy=1, edit=False, data=None):
+    def __init__(self, root, user, hierarchy=1, edit=False, data=None, ask_for_face=True):
         self._user = user
         self._root = root
         self._data = data
@@ -144,9 +142,9 @@ class StaffForm:
         WeeklyHoursText=tk.Entry(root, bg="#ffffff", fg="#333333", font=ft)
         WeeklyHoursText.place(x=190,y=255,width=200,height=30)
         self._text_fields.append(WeeklyHoursText)
-
-        self.FaceAcceptenceCheckbox = tk.Checkbutton(root, font=ft, bg="#86e6e7", fg="#333333", justify="center", text="Employee Accepts Face Use", offvalue="0", onvalue="1", variable=self._var)
-        self.FaceAcceptenceCheckbox.place(x=50, y=290, width=340, height=30)
+        if ask_for_face:
+            self.FaceAcceptenceCheckbox = tk.Checkbutton(root, font=ft, bg="#86e6e7", fg="#333333", justify="center", text="Employee Accepts Face Use", offvalue="0", onvalue="1", variable=self._var)
+            self.FaceAcceptenceCheckbox.place(x=50, y=290, width=340, height=30)
 
         BackButton=tk.Button(root, bg="#ff8c00", fg="#000000", font=ft, justify="center", text="Back")
         BackButton.place(x=50,y=325,width=100,height=25)
@@ -244,7 +242,6 @@ class AdminMenu:
         screenheight = root.winfo_screenheight()
         alignstr = '%dx%d+%d+%d' % (width, height, (screenwidth - width) / 2, (screenheight - height) / 2)
         root.geometry(alignstr)
-        #root.resizable(width=False, height=False)
         ft = tkFont.Font(family='Times',size=12)
 
         EditEmployee_button=tk.Button(root, bg="#ff8c00", fg="#000000", font=ft, justify="center", text="Edit Employee")
@@ -291,11 +288,8 @@ class AdminMenu:
             person = self._employee_listbox.get(index)
             data = self.db.get_user("*", "Name", person)
             if data != []:
-                #top = tk.Toplevel()
-                #top["bg"] = self._root["bg"]
                 root_clear(self._root)
-                StaffForm(self._root, self._user, 1, True, list(data[0]))
-                #top.mainloop()
+                StaffForm(self._root, self._user, 1, True, list(data[0]), False)
 
     def remove_employee(self):
         index = -1
@@ -310,9 +304,6 @@ class AdminMenu:
             showinfo("Removed", "Successfully Removed Employee")
 
     def add_employee(self):
-        #temp_root = tk.Tk()
-        
-        #temp_root["bg"] = self._root["bg"]
         root_clear(self._root)
         StaffForm(self._root, self._user)
 

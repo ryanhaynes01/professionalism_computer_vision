@@ -38,11 +38,7 @@ class FileManager():
         if os.path.exists(dir):
             return True
         
-        # get the traceback if something went wrong and raise it
-        traceback = sys.exc_info()[2]
-        raise FileNotFoundError(
-            f"File/Directory could not be found:\n{dir}"
-        ).with_traceback(traceback)
+        return False
     
     def create_path(self, path=None, *args):
         # if no base path is provided, work from the current working directory
