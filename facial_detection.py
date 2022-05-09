@@ -1,13 +1,47 @@
 # imports
+import time
 import cv2 as cv
+import numpy as np
 import face_recognition
 import utilities as util
 from tkinter.messagebox import showinfo
-import numpy as np
-import time
 
 class NoCamera(Exception):
     pass
+
+class CaptureFace():
+    def __init__(self):
+        self._frame = None
+        self.finished = False
+
+    def get_camera(self):
+        try:
+            # initilaize the camera so opencv can use it
+            camera = cv.VideoCapture(0)
+
+            # if the camera can't be opened, exit and return error
+            if not camera.isOpened():
+                raise NoCamera("No camera could be opened")
+
+            self.found_camera = True
+
+            # otherwise return the camera object
+            return camera
+
+        except NoCamera as e:
+            print(f"Error Loading Camera: {e}")
+
+    def video(self):
+        camera = self.get_camera()
+        while not self.finished:
+            ret, frame = camera.read()
+            self.frame = cv.resize(frame, (640, 480))
+            self._frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+        exit()
+
+    def get_frame(self):
+        return self._frame
+
 
 class FacialDetection():
     def __init__(self):
@@ -129,6 +163,9 @@ class FacialDetection():
                     return
 
             self.public_frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+
+    def get_frame(self):
+        return self.public_frame
 
 if __name__ == '__main__':
     print(cv.__version__)

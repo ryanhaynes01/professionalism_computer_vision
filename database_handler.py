@@ -1,7 +1,7 @@
-import sqlite3 as sql
-import traceback
 import sys
 import datetime
+import traceback
+import sqlite3 as sql
 
 # standard for adding to the database, with type specific requirements
 standard = {

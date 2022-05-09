@@ -1,15 +1,15 @@
+import os
+import time
 import base64
+import threading
+import tkinter as tk
 import utilities as util
 import authenticator as auth
-import os
 import facial_detection as fd
 import database_handler as dh
-import tkinter as tk
 import tkinter.font as tkFont
-from tkinter.messagebox import showinfo
-import time
-import threading
 from PIL import Image, ImageTk
+from tkinter.messagebox import showinfo
 
 def root_clear(root):
     for element in root.winfo_children():
@@ -20,17 +20,61 @@ def _from_rgb(rgb):
     r, g, b = rgb
     return f'#{r:02x}{g:02x}{b:02x}'
 
+class FaceCapture():
+    def __init__(self, root, name, user):
+        self._finished = False
+        self._name = name
+        self._user = user
+        self._root = root
+        self._root.geometry("640x520")
+        self._camera = fd.CaptureFace()
+        self._fm = util.FileManager()
+        self._camera_feed = threading.Thread(target=self._camera.video, args=())
+        self._label = tk.Label(self._root, text="Camera is starting...")
+        self._label.place(x=0, y=0)
+        self._capture = tk.Button(self._root, text="Capture!", command=self.save_image)
+        self._capture.place(x=500, y=240)
+        self._root.update()
+
+    def show_in_gui(self):
+        self._camera_feed.start()
+        while not self._finished:
+            if self._camera.get_frame() is not None:
+                frame = self._camera.get_frame()
+                image = Image.fromarray(frame)
+                image = ImageTk.PhotoImage(image)
+                if self._label is None:
+                    self._label["image"] = image
+                    self._label.grid(row=0, column=0)
+                else:
+                    self._label["image"] = image
+                self._root.update()
+
+    def save_image(self):
+        frame = self._camera.get_frame()
+        self._finished = True
+        self._camera.finished = True
+        self._fm.add_user_face(self._name, frame)
+        root_clear(self._root)
+        AdminMenu(self._root, self._user)
+
+
+        
+
+
 class StaffForm:
-    def __init__(self, root, hierarchy=1, edit=False, data=None):
+    def __init__(self, root, user, hierarchy=1, edit=False, data=None):
+        self._user = user
         self._root = root
         self._data = data
         self._text_fields = []
+        self._var = tk.IntVar()
         self.edit = edit
         self._fm = util.FileManager()
         self.db = dh.DatabaseHandler()
         self._hierarchy = hierarchy
         root.title("Staff Form")
-        root.geometry("450x350")
+        root.geometry("450x450")
         ft = tkFont.Font(family='Times',size=12)
 
         TitleLabel=tk.Label(
@@ -101,19 +145,29 @@ class StaffForm:
         WeeklyHoursText.place(x=190,y=255,width=200,height=30)
         self._text_fields.append(WeeklyHoursText)
 
+        self.FaceAcceptenceCheckbox = tk.Checkbutton(root, font=ft, bg="#86e6e7", fg="#333333", justify="center", text="Employee Accepts Face Use", offvalue="0", onvalue="1", variable=self._var)
+        self.FaceAcceptenceCheckbox.place(x=50, y=290, width=340, height=30)
+
         BackButton=tk.Button(root, bg="#ff8c00", fg="#000000", font=ft, justify="center", text="Back")
-        BackButton.place(x=50,y=290,width=100,height=25)
+        BackButton.place(x=50,y=325,width=100,height=25)
         BackButton["command"] = self.BackButton_command
 
         SubmitButton=tk.Button(root, bg="#ff8c00", fg="#000000", font=ft, justify="center", text="Submit")
-        SubmitButton.place(x=290,y=290,width=100,height=25)
+        SubmitButton.place(x=290,y=325,width=100,height=25)
         SubmitButton["command"] = self.SubmitButton_command
 
         if edit:
             self.edit_user()
 
     def BackButton_command(self):
-        self._root.destroy()
+        if self._hierarchy == 1:
+            root_clear(self._root)
+            AdminMenu(self._root, self._user)
+            return
+        else:
+            root_clear(self._root)
+            EmployeeMenu(self._root)
+            return
 
     def SubmitButton_command(self):
         if self.edit:
@@ -128,8 +182,17 @@ class StaffForm:
                 info += f"'{field.get()}',"
         info += "'1'"
         self.db.handler("insert", [info])
+
+        if self._var.get() == 1:
+            name = self._text_fields[0].get()
+            root_clear(self._root)
+            FaceCapture(self._root, name, self._user).show_in_gui()
+            return
+
         showinfo("Success", "Information added successfully!")
-        self._root.destroy()
+        root_clear(self._root)
+        AdminMenu(self._root, self._user)
+        return
 
     def submit_edit(self):
         fields = list(dh.standard.keys())
@@ -169,6 +232,8 @@ class StaffForm:
 class AdminMenu:
     def __init__(self, root, user):
         self.db = dh.DatabaseHandler()
+        self.fm = util.FileManager()
+        self._user = user
         #setting title
         self._root = root
         root.title("Admin Menu")
@@ -226,9 +291,11 @@ class AdminMenu:
             person = self._employee_listbox.get(index)
             data = self.db.get_user("*", "Name", person)
             if data != []:
-                temp_root = tk.Tk()
-                temp_root["bg"] = self._root["bg"]
-                StaffForm(temp_root, 1, True, list(data[0]))
+                #top = tk.Toplevel()
+                #top["bg"] = self._root["bg"]
+                root_clear(self._root)
+                StaffForm(self._root, self._user, 1, True, list(data[0]))
+                #top.mainloop()
 
     def remove_employee(self):
         index = -1
@@ -238,12 +305,16 @@ class AdminMenu:
 
         if index != -1:
             self.db.remove_user("Name", self._employee_listbox.get(index))
+            if self.fm.validate_path(self.fm.create_path("faces", self._employee_listbox.get(index))):
+                self.fm.remove_user(self._employee_listbox.get(index))
             showinfo("Removed", "Successfully Removed Employee")
 
     def add_employee(self):
-        temp_root = tk.Tk()
-        temp_root["bg"] = self._root["bg"]
-        StaffForm(temp_root)
+        #temp_root = tk.Tk()
+        
+        #temp_root["bg"] = self._root["bg"]
+        root_clear(self._root)
+        StaffForm(self._root, self._user)
 
     def log_out(self):
         self._root = root_clear(self._root)
@@ -255,6 +326,7 @@ class AdminMenu:
 class EmployeeMenu:
     def __init__(self, root, name):
         #setting title
+        self._name = name
         self._root = root
         self.db = dh.DatabaseHandler()
         root.title("Employee Menu")
@@ -466,7 +538,6 @@ class LoginWithVideo():
         self.face = fd.FacialDetection()
         self.db = dh.DatabaseHandler()
         self.thread = threading.Thread(target=self.face.show_video, args=())
-        self.frame = None
         self._username_error = False
         ft = tkFont.Font(family='Times',size=12)
 
@@ -560,12 +631,12 @@ class LoginWithVideo():
             os.remove(f"faces/{name}/tmp.jpg")
 
         except NameError as e:
-            print(e)
+            print(f"Login with video experienced a name error: {e}")
             LoginWithVideo(self._root)
             return
 
         except Exception as e:
-            print(e)
+            print(f"Login with video experienced an unexpected error: {e}")
             LoginWithVideo(self._root)
             return
 
@@ -574,7 +645,7 @@ class LoginWithVideo():
                 if self.face.init_time is None:
                     self.face.init_time = time.time()
             
-                self.frame = self.face.public_frame
+                self.frame = self.face.get_frame()
                 image = Image.fromarray(self.frame)
                 image = ImageTk.PhotoImage(image)
 
@@ -624,3 +695,6 @@ def main():
 
 if __name__ == '__main__':
     main()
+    #root = tk.Tk()
+    #pog = FaceCapture(root)
+    #root.mainloop()

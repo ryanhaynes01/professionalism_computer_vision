@@ -1,6 +1,8 @@
-import base64
-import sys
 import os
+import cv2
+import sys
+import shutil
+import base64
 import database_handler as dh
 
 class FileManager():
@@ -47,12 +49,27 @@ class FileManager():
         if path is None:
             path = os.getcwd()
 
-        # append each child folder in args to the path, geenerating a long
+        # append each child folder in args to the path, generating a long
         # directory string to be used
         for child in args:
             path = os.path.join(path, child)
 
         return path
+
+    def add_user_face(self, name, frame):
+        face_path = os.path.join(self.cwd, "faces")
+        new_path = os.path.join(face_path, name)
+        os.mkdir(new_path)
+        cv2.imwrite(os.path.join(new_path, "face.jpg"), frame)
+        encoder = ImageEncoder(name)
+        encoder.convert()
+        os.remove(os.path.join(new_path, "face.jpg"))
+
+    def remove_user(self, name):
+        faces_folder = os.path.join(self.cwd, "faces")
+        if self.validate_path(os.path.join(faces_folder, name)):
+            user = os.path.join(faces_folder, name)
+            shutil.rmtree(user, ignore_errors=True)
 
 class ImageEncoder():
     def __init__(self, name):
